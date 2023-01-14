@@ -7,7 +7,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
+//resources/static/css/bootstrap.min.css
 class ItemRepositoryTest{
     ItemRepository itemRepository = new ItemRepository();
 
