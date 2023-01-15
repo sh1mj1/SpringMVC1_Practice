@@ -738,3 +738,125 @@ th:onclick="|location.href='
 💡 자바에서 SSR (뷰 템플릿) 쓸 때 SSR 의 단점을 해결(blinking 해결이나 전체 뷰 템플릿이 아닌 작은 이미지만 교체해야 할 경우 전체 페이지를 다시 랜더링 하지 않도록 하기) 하기 위해서 Java Spring 에서는 어떻게 해결하는가???????
 
 </aside>
+
+# 6. 상품 상세
+
+### 상품 상세 컨트롤러와 뷰 개발!
+
+**`BasicItemController` 에 추가한다.**
+
+```java
+@GetMapping("/{itemId}")
+public String item(@PathVariable Long itemId, Model model) {
+    Item item = itemRepository.findById(itemId);
+    model.addAttribute("item", item);
+    return "basic/item";
+}
+```
+
+PathVariable 로 넘어온 상품ID 로 상품을 조회하고 모델에 담아둔다. 그리고 뷰 템플릿을 호출.
+
+### 상품 상세 뷰
+
+정적 HTML 을 뷰 템플릿(templates) 영역으로 복사하고 수정.
+
+/resources/static/item.html **→** 복사 **→** /resources/templates/basic/item.html
+
+`**/resources/templates/basic/item.html**`
+
+```html
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <link href="/static/css/bootstrap.min.css"
+          th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <style>
+        .container {
+            max-width: 560px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="py-5 text-center">
+        <h2>상품 상세</h2>
+    </div>
+    <div>
+        <label for="itemId">상품 ID</label>
+        <input type="text" id="itemId" name="itemId" class="form-control"
+               value="1" th:value="${item.id}" readonly>
+    </div>
+    <div>
+        <label for="itemName">상품명</label>
+        <input type="text" id="itemName" name="itemName" class="form-control"
+               value="상품A" th:value="${item.itemName}" readonly>
+    </div>
+    <div>
+        <label for="price">가격</label>
+        <input type="text" id="price" name="price" class="form-control"
+               value="10000" th:value="${item.price}" readonly>
+    </div>
+    <div>
+        <label for="quantity">수량</label>
+        <input type="text" id="quantity" name="quantity" class="form-control"
+               value="10" th:value="${item.quantity}" readonly>
+    </div>
+    <hr class="my-4">
+    <div class="row">
+        <div class="col">
+            <button class="w-100 btn btn-primary btn-lg"
+                    onclick="location.href='editForm.html'"
+                    th:onclick="|location.href='@{/basic/item/{itemId}/
+                                        edit(itemId=${item.id})}'|" type="button">상품 수정
+            </button>
+        </div>
+        <div class="col">
+            <button class="w-100 btn btn-secondary btn-lg"
+                    onclick="location.href='items.html'"
+                    th:onclick="|location.href='@{/basic/items}'|"
+                    type="button">목록으로
+            </button>
+        </div>
+    </div>
+</div> <!-- /container -->
+</body>
+</html>
+```
+
+
+**인텔리제이 내에서 순수 HTML 을 유지.** 
+
+
+
+**뷰 템플릿 사용!!**
+
+### `**th:value = “${item.id}”` (속성 변경 -th:value)**
+
+```html
+<input type="text" id="itemId" name="itemId" class="form-control"
+       value="1" **th:value="${item.id}**" readonly>
+```
+
+- 모델에 있는 item 정보를 휙득하고 프로퍼티 접근법으로 출력. (마치 item.getId() 처럼)
+- value 속성을 th:value 속성으로 변경.
+
+### **상품을 수정하는 곳으로의 링크**
+
+```html
+<button class="w-100 btn btn-primary btn-lg"
+    onclick="location.href='editForm.html'"
+    **th:onclick="|location.href='@{/basic/item/{itemId}/edit(itemId=${item.id})}'|"** 
+		type="button">상품 수정
+</button>
+```
+
+### **목록으로 링크**
+
+```html
+<button class="w-100 btn btn-secondary btn-lg"
+        onclick="location.href='items.html'"
+        **th:onclick="|location.href='@{/basic/items}'|"**
+        type="button">목록으로
+</button>
+```
