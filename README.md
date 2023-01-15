@@ -1200,3 +1200,133 @@ public String edit(@PathVariable Long itemId, @ModelAttribute Item item) {
 
 HTML Form 전송은 PUT, PATCH를 지원하지 않는다. GET, POST만 사용할 수 있다.PUT, PATCH는 HTTP API 전송시에 사용스프링에서 HTTP POST로 Form 요청할 때 히든 필드를 통해서 PUT, PATCH 매핑을 사용하는 방법이 있지만, HTTP 요청상 POST 요청이다.
 
+# 10. PRG Post/Redirect
+
+지금까지 진행한 상품 등록 처리 컨트롤러는 심각한 문제가 있다. 
+
+addItemV1 ~ addItemV4 에서 상품 등록을 완료하고 웹 브라우저의 새로고침하면 상품이 계속해서  중복 등록된다.
+
+
+
+웹 브라우저의  새로고침은 마지막에 서버에 전송한 데이터를 다시 전송
+→ 상품 등록 폼에서 데이터 입력, 상품 등록하면 상품 데이터를 서버로 전송한다. 이 상태에서 새로고침을 또 선택하면 **마지막에 전송한 POST/add + 상품 데이터를 서버로 또 다시 전송**한다.
+
+이를 해결하기 위해서 아래 코드를 봅시다.
+
+
+
+새로 고침문제를 해결하려면 상품 저장 후에 뷰 템플릿으로 이동하는 것이 아닌, **상품 상세 화면으로 리다레이팅**을 해주면 된다. 웹 브라우저는 리다이렉트의 영향으로 **상품 저장 후에 실제 상품 상세 화면으로 다시 이동**한다.
+
+즉, 마지막에 호출한 내용이 상품 상세 화면 ( GET /items/{id} ) 가 되는 것이다. 이후 새로고침을 한다면 마지막 호출한 내용인 상품 상세 화면으로 이동하게 되므로 새로 고침 문제를 해결할 수 있다.
+
+**`addItemV5` - `BasicItemController` 에 추가**
+
+```java
+@PostMapping("/add")
+public String addItemV5(Item item){
+    itemRepository.save(item);
+    return "redirect:/basic/items/" + item.getId();
+}
+```
+
+상품 등록 처리 이후에 뷰 템플릿이 아니라 상품 상세 화면으로 리다이렉트하는 코드!
+
+이런 문제 해결 방식을 **PRG** **Post/Redirect/Get** 이라고 한다!
+
+> **주의**
+> 
+> 
+> **`"redirect:/basic/items/" + item.getId()` 
+> redirect에서 +item.getId()처럼 URL에 변수를 더해서 사용하는 것은 URL 인코딩이 안되기 때문에 위험하다. 다음에 설명하는 RedirectAttributes를 사용하자.**
+>
+
+
+# 10. PRG Post/Redirect
+
+지금까지 진행한 상품 등록 처리 컨트롤러는 심각한 문제가 있다. 
+
+addItemV1 ~ addItemV4 에서 상품 등록을 완료하고 웹 브라우저의 새로고침하면 상품이 계속해서  중복 등록된다.
+
+
+
+웹 브라우저의  새로고침은 마지막에 서버에 전송한 데이터를 다시 전송
+→ 상품 등록 폼에서 데이터 입력, 상품 등록하면 상품 데이터를 서버로 전송한다. 이 상태에서 새로고침을 또 선택하면 **마지막에 전송한 POST/add + 상품 데이터를 서버로 또 다시 전송**한다.
+
+이를 해결하기 위해서 아래 그림을 봅시다.
+
+
+
+새로 고침문제를 해결하려면 상품 저장 후에 뷰 템플릿으로 이동하는 것이 아닌, **상품 상세 화면으로 리다레이팅**을 해주면 된다. 웹 브라우저는 리다이렉트의 영향으로 **상품 저장 후에 실제 상품 상세 화면으로 다시 이동**한다.
+
+즉, 마지막에 호출한 내용이 상품 상세 화면 ( GET /items/{id} ) 가 되는 것이다. 이후 새로고침을 한다면 마지막 호출한 내용인 상품 상세 화면으로 이동하게 되므로 새로 고침 문제를 해결할 수 있다.
+
+**`addItemV5` - `BasicItemController` 에 추가**
+
+```java
+@PostMapping("/add")
+public String addItemV5(Item item){
+    itemRepository.save(item);
+    return "redirect:/basic/items/" + item.getId();
+}
+```
+
+상품 등록 처리 이후에 뷰 템플릿이 아니라 상품 상세 화면으로 리다이렉트하는 코드!
+
+이런 문제 해결 방식을 **PRG** **Post/Redirect/Get** 이라고 한다!
+
+> **주의**
+> 
+> 
+> **`"redirect:/basic/items/" + item.getId()` 
+> redirect에서 +item.getId()처럼 URL에 변수를 더해서 사용하는 것은 URL 인코딩이 안되기 때문에 위험하다. 다음에 설명하는 RedirectAttributes를 사용하자.**
+> 
+
+# 11. RedirectAttributes
+
+상품을 저장하고 상품 상세 화면으로 리다이렉트 한 것 까지는 좋았다. 그런데 고객 입장에서 저장이 잘 된 것인지 안 된 것인지 확신이 들지 않는다. 그래서 **저장이 잘 되었으면 상품 상세 화면에 "저장되었습니다"라는 메시지**를 보여달라는 요구사항이 왔다. 간단하게 해결해봅시다.
+
+`**BasicItemController**` 에 추가
+
+```java
+// RedirectAttributes
+@PostMapping("/add")
+public String addItemV6(Item item, RedirectAttributes redirectAttributes) {
+    Item savedItem = itemRepository.save(item);
+    redirectAttributes.addAttribute("itemId", savedItem.getId());
+    redirectAttributes.addAttribute("status", true);
+    return "redirect:/basic/items/{itemId}";
+}
+```
+
+리다이렉트할 때의 Attribute 을 추가하기 위해 함수의 패러미터를 RedirectAttributes 로 설정한다. 뷰 템플릿에서 이 값이 있으면 저장 완료! 라는 메시지가 출력되도록 이제 뷰 템플릿을 바꾸어야 한다.
+
+`resources/templates/basic/**item.html**` - 뷰 템플릿 메시지 추가.
+
+```html
+<div class="container">
+    <div class="py-5 text-center">
+        <h2>상품 상세</h2>
+    </div>
+    
+    **<h2 th:if="${param.status}" th:text="'저장 완료!'"></h2> <!-- 추가 -->**
+    <div>
+        <label for="itemId">상품 ID</label>
+        <input type="text" id="itemId" name="itemId" class="form-control"
+               value="1" th:value="${item.id}" readonly>
+    </div>
+```
+
+- `**th:if**`
+    - 해당 조건이 참이면 실행한다.
+- `**${param.status}**`
+    - 타임리프에서 쿼리 파라미터를 편리하게 조회한다.
+    - 원래는 컨트롤러에서 모델에 직접 담고 값을 꺼내야 하지만 쿼리 파라미터는 자주 사용하기 때문에 타임리프에서 직접 지원한다.
+
+
+
+실행했을 때 [http://localhost:8080/basic/items/3?status=true](http://localhost:8080/basic/items/4?status=true) 라는 결과가 나온다.
+
+**RedirectAttributes** 을 사용하면 URL 인코딩도 해주고, pathVariable, 쿼리 파라미터까지 알아서 처리해준다.
+
+
+물론 상품 목록에서 상품 상세로 이동한 경우에는 해당 메시지가 출력되지 않는다!

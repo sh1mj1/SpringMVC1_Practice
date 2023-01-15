@@ -10,6 +10,7 @@
             max-width: 560px;
         }
     </style>
+
 </head>
 <body>
 <div class="container">
@@ -17,6 +18,8 @@
         <h2>상품 상세</h2>
     </div>
     <div>
+        <h2 th:if="${param.status}" th:text="'저장 완료!'"></h2> <!-- 추가 -->
+
         <label for="itemId">상품 ID</label>
         <input type="text" id="itemId" name="itemId"
                class="form-control" value="1"
