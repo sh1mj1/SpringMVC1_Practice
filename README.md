@@ -860,3 +860,110 @@ PathVariable 로 넘어온 상품ID 로 상품을 조회하고 모델에 담아�
         type="button">목록으로
 </button>
 ```
+
+
+# 7. 상품 등록 폼
+
+### `BasicItemController` - 상품 등록 폼
+
+```java
+@GetMapping("/add")
+public String addFrom() {
+    return "basic/addForm";
+}
+```
+
+상품 등록 폼은 단순히 뷰 템플릿만 호출.
+
+### **상품 등록 폼 뷰**
+
+/resources/static/addForm.html → 복사 → /resources/templates/basic/addForm.html
+
+`/resources/templates/basic/**addForm.html**`
+
+```html
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="utf-8">
+        <link href="../css/bootstrap.min.css"
+              th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+        <style>
+            .container {
+                max-width: 560px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="py-5 text-center">
+                <h2>상품 등록 폼</h2>
+            </div>
+            <h4 class="mb-3">상품 입력</h4>
+            <form action="item.html" th:action method="post">
+                <div>
+                    <label for="itemName">상품명</label>
+                    <input type="text" id="itemName" name="itemName" class="formcontrol"
+                           placeholder="이름을 입력하세요">
+                </div>
+                <div>
+                    <label for="price">가격</label>
+                    <input type="text" id="price" name="price" class="form-control"
+                           placeholder="가격을 입력하세요">
+                </div>
+                <div>
+                    <label for="quantity">수량</label>
+                    <input type="text" id="quantity" name="quantity" class="formcontrol"
+                           placeholder="수량을 입력하세요">
+                </div>
+                <hr class="my-4">
+                <div class="row">
+                    <div class="col">
+                        <button class="w-100 btn btn-primary btn-lg" type="submit">상품
+                            등록</button>
+                    </div>
+                    <div class="col">
+                        <button class="w-100 btn btn-secondary btn-lg"
+                                onclick="location.href='items.html'"
+                                th:onclick="|location.href='@{/basic/items}'|"
+                                type="button">취소</button>
+                    </div>
+                </div>
+            </form>
+        </div> <!-- /container -->
+    </body>
+</html>
+```
+
+
+
+
+### 속성 변경  - `th:action`
+
+```html
+<form action="item.html" th:action method="post">
+		<div.....</div**>
+		<div.....</div**>
+		<div.....</div>
+</form>
+```
+
+- HTML form 에서 action에 값이 없으면 현재 URL 에 데이터를 전송한다.
+- 상품 등록 폼의 URL 과 실제 상품 등록을 처리하는 URL 을 똑같이 맞추고 HTTP 메서드로 두 기능을 구분.
+    - 상품 등록 폼: GET `/basic/items/add`
+    - 상품 등록 처리: POST `/basic/items/add`
+- 이렇게 하면 하나의 URL 로 등록 폼과 등록 처리를 깔끔하게 처리할 수 있다.
+
+### 취소
+
+- 취소 시 상품 목록으로 이동한다.
+
+```html
+<div class="col">
+    <button class="w-100 btn btn-secondary btn-lg"
+            onclick="location.href='items.html'"
+            th:onclick="|location.href='@{/basic/items}'|"
+            type="button">취소
+    </button>
+</div>
+```
